@@ -178,6 +178,9 @@ class ConfigBase:
 
 class AppConfig(ConfigBase):
     """ Handle app configuration """
+
+    filtername = 'default'
+
     def __init__(self):
         ConfigBase.__init__(self)
         self.log = logging.getLogger('AppConfig')
@@ -192,20 +195,23 @@ class AppConfig(ConfigBase):
             os.makedirs(self.basedir)
         if not os.path.isfile(self.configpath):
             self.create()
-        if not os.path.isfile(self.filterpath):
-            open(self.filterpath, 'w').close()
+        if not os.path.isdir(self.filterpath):
+            os.makedirs(self.filterpath)
         if not os.path.isfile(self.friendspath):
             open(self.friendspath, 'w').close()
 
         self.log.debug('CONFIG_FILE: %s' % self.configpath)
-        self.log.debug('FILTERS_FILE: %s' % self.filterpath)
+        self.log.debug('FILTERS_FOLDER: %s' % self.filterpath)
         self.log.debug('FRIENDS_FILE: %s' % self.friendspath)
 
         self.load()
 
-    def load_filters(self):
+    def load_filters(self, column_id=filtername):
+        path = os.path.join(self.filterpath, column_id)
+        if not os.path.isfile(path):
+            return []
         muted = []
-        _fd = open(self.filterpath, 'r')
+        _fd = open(path, 'r')
         for line in _fd:
             if line == '\n':
                 continue
@@ -213,27 +219,29 @@ class AppConfig(ConfigBase):
         _fd.close()
         return muted
 
-    def save_filters(self, filter_list):
-        _fd = open(self.filterpath, 'w')
+    def save_filters(self, filter_list, column_id=filtername):
+        path = os.path.join(self.filterpath, column_id)
+        _fd = open(path, 'w')
         for expression in filter_list:
             _fd.write(expression + '\n')
         _fd.close()
 
-    def append_filter(self, expression):
+    def append_filter(self, expression, column_id=filtername):
+        path = os.path.join(self.filterpath, column_id)
         for term in self.load_filters():
             if term == expression:
                 raise ExpressionAlreadyFiltered
-        _fd = open(self.filterpath, 'a')
+        _fd = open(path, 'a')
         _fd.write(expression + '\n')
         _fd.close()
 
-    def remove_filter(self, expression):
+    def remove_filter(self, expression, column_id=filtername):
         new_list = []
-        for term in self.load_filters():
+        for term in self.load_filters(column_id):
             if term == expression:
                 continue
             new_list.append(term)
-        self.save_filters(new_list)
+        self.save_filters(new_list, column_id)
 
     def load_friends(self):
         friends = []

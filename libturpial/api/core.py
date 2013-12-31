@@ -64,9 +64,12 @@ class Core:
         self.accman = AccountManager(self.config)
         self.column_manager = ColumnManager(self.config)
 
-    def __apply_filters(self, statuses):
+    def apply_filters(self, statuses, filters=None):
         filtered_statuses = []
-        filtered_terms = self.config.load_filters()
+        if isinstance(filters, list):
+            filtered_terms = filters
+        else:
+            filtered_terms = self.config.load_filters(filters)
         if len(filtered_terms) == 0:
             return statuses
 
@@ -219,7 +222,7 @@ class Core:
 
         account = self.accman.get(account_id)
         if column_id == ColumnType.TIMELINE:
-            rtn = self.__apply_filters(account.get_timeline(count, since_id))
+            rtn = account.get_timeline(count, since_id)
         elif column_id == ColumnType.REPLIES:
             rtn = account.get_replies(count, since_id)
         elif column_id == ColumnType.DIRECTS:
