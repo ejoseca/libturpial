@@ -68,6 +68,8 @@ class Core:
         filtered_statuses = []
         if isinstance(filters, list):
             filtered_terms = filters
+        elif not filters:
+            filtered_terms = self.config.load_filters()
         else:
             filtered_terms = self.config.load_filters(filters)
         if len(filtered_terms) == 0:
@@ -621,11 +623,16 @@ class Core:
     def save_all_config(self, new_config):
         self.config.save(new_config)
 
-    def list_filters(self):
-        return self.config.load_filters()
+    def list_filters(self, column_id=None):
+        if not column_id:
+            return self.config.load_filters()
+        return self.config.load_filters(column_id)
 
-    def save_filters(self, lst):
-        self.config.save_filters(lst)
+    def save_filters(self, lst, column_id=None):
+        if not column_id:
+            self.config.save_filters(lst)
+        else:
+            self.config.save_filters(lst, column_id)
 
     def delete_current_config(self):
         self.config.delete_current_config()
